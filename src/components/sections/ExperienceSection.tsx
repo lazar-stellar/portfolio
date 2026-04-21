@@ -10,9 +10,16 @@ export default function ExperienceSection() {
           <>
             <SectionHeading
               label="Experience"
-              title="Professional experience and growth over the past few years."
+              title="Professional experience building full stack applications, backend systems, and scalable APIs."
               className="max-w-4xl"
             />
+
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-600 dark:text-zinc-300 sm:text-base sm:leading-8">
+              My experience includes building full stack applications, scalable
+              backend systems, API integrations, reporting flows, and
+              database-driven business logic for internal products and client
+              platforms.
+            </p>
 
             <div className="relative mt-8 sm:mt-12">
               <div className="absolute left-3 top-0 hidden h-full w-px bg-zinc-200 dark:bg-white/10 lg:block" />

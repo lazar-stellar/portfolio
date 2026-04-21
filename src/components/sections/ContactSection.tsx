@@ -31,14 +31,14 @@ export default function ContactSection() {
             <div>
               <SectionHeading
                 label="Contact"
-                title="Let’s talk about your next project."
+                title="Let’s talk about your next web application or backend project."
                 className="max-w-3xl"
               />
 
               <p className="section-copy mt-5 max-w-xl text-sm leading-7 sm:mt-6 sm:text-base sm:leading-8">
-                Whether you need a modern web app, a polished dashboard, a
-                strong backend foundation, or help improving an existing
-                product, feel free to reach out.
+                Whether you need a modern web application, a scalable backend
+                system, API development, or help improving an existing product,
+                feel free to reach out.
               </p>
 
               <div className="mt-6 grid gap-3 sm:mt-8 sm:gap-4">
@@ -131,8 +131,8 @@ export default function ContactSection() {
 
                 <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs leading-6 text-zinc-500 dark:text-zinc-400 sm:text-sm sm:leading-7">
-                    Best for project inquiries, freelance work, and
-                    collaboration opportunities.
+                    Open to full-time roles, freelance projects, and backend or
+                    full stack development opportunities.
                   </p>
 
                   <button

@@ -9,9 +9,15 @@ export default function SkillsSection() {
     >
       <SectionHeading
         label="Skills & stack"
-        title="Technologies I use to design, build, and ship modern web applications."
+        title="Technologies I use to build modern web applications, scalable APIs, and backend systems."
         className="max-w-3xl"
       />
+
+      <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-600 dark:text-zinc-300 sm:text-base sm:leading-8">
+        My stack covers frontend development, backend architecture, API design,
+        database management, and modern workflows for building scalable web
+        applications.
+      </p>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-3">
         {skillGroups.map((group) => (

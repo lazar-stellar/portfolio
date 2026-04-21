@@ -25,9 +25,10 @@ export default function HeroSection({ onScrollToSection }: HeroSectionProps) {
         </span>
 
         <h1 className="mt-5 max-w-5xl text-4xl font-bold leading-[1.02] tracking-tight sm:mt-6 sm:text-5xl lg:text-7xl">
-          I build web applications with
+          Lazar Panović
           <span className="block bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
-            strong backend systems and polished frontend experiences.
+            Full Stack Developer building strong backend systems and polished
+            frontend experiences.
           </span>
         </h1>
 

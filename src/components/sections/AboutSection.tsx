@@ -13,7 +13,7 @@ export default function AboutSection() {
             <div>
               <SectionHeading
                 label="About me"
-                title="Full stack developer focused on backend systems, product thinking, and modern web experiences."
+                title="Full Stack Developer specialized in backend systems, scalable APIs, and modern web applications."
                 className="max-w-4xl"
               />
 

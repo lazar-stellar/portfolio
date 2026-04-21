@@ -24,47 +24,89 @@ export default function Home() {
     }
   };
 
+  const personJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Lazar Panović",
+    url: "https://www.lazarpanovic.dev/",
+    image: "https://www.lazarpanovic.dev/og.png",
+    jobTitle: "Full Stack Developer",
+    description:
+      "Full Stack Developer specialized in NestJS, Node.js, Next.js, and scalable backend systems.",
+    sameAs: [
+      "https://www.linkedin.com/in/lazar-panovi%C4%87-252160209/",
+      "https://github.com/Lazarpanovic",
+    ],
+    knowsAbout: [
+      "NestJS",
+      "Node.js",
+      "Next.js",
+      "TypeScript",
+      "PostgreSQL",
+      "Microsoft SQL Server",
+      "REST API Development",
+      "Backend Development",
+      "Full Stack Development",
+    ],
+  };
+
   return (
     <div className={isDark ? "dark" : ""}>
       <Head>
-        <title>Lazar Panović | Full Stack Developer</title>
+        <title>
+          Lazar Panović | Full Stack Developer | NestJS, Node.js, Next.js
+        </title>
 
         <meta
           name="description"
-          content="Full stack developer focused on backend systems, scalable APIs, and modern web applications."
+          content="Full Stack Developer specialized in NestJS, Node.js, Next.js, and scalable backend systems. Building APIs, database-driven applications, and modern web platforms."
         />
 
         <link rel="canonical" href="https://www.lazarpanovic.dev/" />
 
-        {/* Open Graph */}
         <meta
           property="og:title"
-          content="Lazar Panović | Full Stack Developer"
+          content="Lazar Panović | Full Stack Developer | NestJS, Node.js, Next.js"
         />
         <meta
           property="og:description"
-          content="Full stack developer focused on backend systems, scalable APIs, and modern web applications."
+          content="Full Stack Developer specialized in NestJS, Node.js, Next.js, and scalable backend systems. Building APIs, database-driven applications, and modern web platforms."
         />
         <meta
           property="og:image"
           content="https://www.lazarpanovic.dev/og.png"
         />
+        <meta
+          property="og:image:alt"
+          content="Lazar Panović - Full Stack Developer portfolio"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.lazarpanovic.dev/" />
+        <meta property="og:site_name" content="Lazar Panović" />
+        <meta property="og:locale" content="en_US" />
 
-        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Lazar Panović | Full Stack Developer"
+          content="Lazar Panović | Full Stack Developer | NestJS, Node.js, Next.js"
         />
         <meta
           name="twitter:description"
-          content="Full stack developer focused on backend systems, scalable APIs, and modern web applications."
+          content="Full Stack Developer specialized in NestJS, Node.js, Next.js, and scalable backend systems. Building APIs, database-driven applications, and modern web platforms."
         />
         <meta
           name="twitter:image"
           content="https://www.lazarpanovic.dev/og.png"
+        />
+        <meta
+          name="twitter:image:alt"
+          content="Lazar Panović - Full Stack Developer portfolio"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
       </Head>
 
