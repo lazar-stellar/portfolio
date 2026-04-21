@@ -9,8 +9,8 @@ import HeroSection from "../src/components/sections/HeroSection";
 import ProjectsSection from "../src/components/sections/ProjectsSection";
 import SkillsSection from "../src/components/sections/SkillsSection";
 import { useTheme } from "../src/hooks/use-theme";
-import { personalInfo } from "../src/data/personal";
 import CtaSection from "../src/components/sections/CtaSection";
+import BlogsSection from "../src/components/sections/BlogsSection";
 
 export default function Home() {
   const { isDark, toggleTheme } = useTheme();
@@ -48,6 +48,13 @@ export default function Home() {
       "Backend Development",
       "Full Stack Development",
     ],
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    url: "https://www.lazarpanovic.dev",
+    name: "Lazar Panović",
   };
 
   return (
@@ -108,15 +115,15 @@ export default function Home() {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
       </Head>
 
       <main className="min-h-screen bg-zinc-50 text-zinc-900 transition-colors duration-300 dark:bg-zinc-950 dark:text-white">
-        <section className="mx-auto max-w-7xl px-6 pb-16 pt-6 sm:px-8 lg:px-10">
-          <Navbar
-            isDark={isDark}
-            onToggleTheme={toggleTheme}
-            onScrollToSection={scrollToSection}
-          />
+        <Navbar isDark={isDark} onToggleTheme={toggleTheme} />
+        <section className="mx-auto max-w-7xl px-6 pb-16 pt-16 sm:px-8 lg:px-10">
           <HeroSection onScrollToSection={scrollToSection} />
         </section>
 
@@ -124,7 +131,8 @@ export default function Home() {
         <ExperienceSection />
         <SkillsSection />
         <ProjectsSection />
-        <CtaSection onScrollToSection={scrollToSection} />
+        <BlogsSection />
+        <CtaSection />
         <ContactSection />
         <Footer currentYear={currentYear} />
       </main>

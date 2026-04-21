@@ -8,6 +8,7 @@ import {
 } from "react-icons/ai";
 import laki from "../../../public/laki.png";
 import { personalInfo } from "../../data/personal";
+import Link from "next/link";
 
 type HeroSectionProps = {
   onScrollToSection: (id: string) => void;
@@ -38,9 +39,43 @@ export default function HeroSection({ onScrollToSection }: HeroSectionProps) {
 
         <div className="mt-6 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3">
           <span className="tag">3+ years</span>
-          <span className="tag">NestJS & APIs</span>
-          <span className="tag">React / Next.js</span>
-          <span className="tag">SQL databases</span>
+
+          <Link
+            href="/nestjs-developer"
+            className="relative inline-block group animate-[pulse_3.2s_ease-in-out_infinite]"
+          >
+            {/* Glow iza dugmeta */}
+            <span className="absolute inset-0 -z-10 rounded-full bg-cyan-400/20 blur-md opacity-60 transition duration-500 group-hover:opacity-90 group-hover:blur-lg" />
+
+            {/* Dugme */}
+            <span className="tag relative z-10 cursor-pointer transition duration-300 hover:-translate-y-0.5 hover:shadow-md border border-cyan-300/60 group-hover:border-cyan-400">
+              NestJS & APIs
+            </span>
+          </Link>
+
+          <Link
+            href="/backend-developer"
+            className="tag group relative cursor-pointer transition duration-300 hover:-translate-y-0.5 hover:shadow-md"
+          >
+            Backend systems
+            <span className="absolute inset-0 rounded-full border border-cyan-400 opacity-0 transition group-hover:opacity-100" />
+          </Link>
+
+          <Link
+            href="/full-stack-developer"
+            className="tag group relative cursor-pointer transition duration-300 hover:-translate-y-0.5 hover:shadow-md"
+          >
+            React / Next.js
+            <span className="absolute inset-0 rounded-full border border-cyan-400 opacity-0 transition group-hover:opacity-100" />
+          </Link>
+
+          <Link
+            href="/database-driven-applications"
+            className="tag group relative cursor-pointer transition duration-300 hover:-translate-y-0.5 hover:shadow-md"
+          >
+            SQL databases
+            <span className="absolute inset-0 rounded-full border border-cyan-400 opacity-0 transition group-hover:opacity-100" />
+          </Link>
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:gap-4">

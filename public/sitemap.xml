@@ -1,8 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.lazarpanovic.dev/</loc>
-    <lastmod>2026-04-21</lastmod>
-    <priority>1.0</priority>
-  </url>
-</urlset>
+export default function sitemap() {
+  const baseUrl = "https://www.lazarpanovic.dev";
+
+  return [
+    "",
+    "/full-stack-developer",
+    "/database-driven-applications",
+    "/blogs",
+    "/blogs/nestjs-structure",
+    "/blogs/fullstack-nextjs-nestjs",
+    "/blogs/postgres-vs-mssql",
+  ].map((path) => ({
+    url: `${baseUrl}${path}`,
+    lastModified: new Date(),
+  }));
+}

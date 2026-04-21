@@ -1,12 +1,9 @@
 import { AiOutlineArrowRight, AiOutlineCloudDownload } from "react-icons/ai";
 import Reveal from "../ui/Reveal";
 import { personalInfo } from "../../data/personal";
+import Link from "next/link";
 
-type CtaSectionProps = {
-  onScrollToSection: (id: string) => void;
-};
-
-export default function CtaSection({ onScrollToSection }: CtaSectionProps) {
+export default function CtaSection() {
   return (
     <section className="mx-auto max-w-7xl px-6 py-12 sm:px-8 sm:py-16 lg:px-10">
       <Reveal>
@@ -39,12 +36,12 @@ export default function CtaSection({ onScrollToSection }: CtaSectionProps) {
             </div>
 
             <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row sm:gap-4">
-              <button
-                onClick={() => onScrollToSection("contact")}
+              <Link
+                href="/#contact"
                 className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-white dark:text-zinc-900 sm:min-w-[210px] sm:rounded-2xl sm:px-6 sm:py-4 sm:text-base"
               >
                 Get in touch <AiOutlineArrowRight />
-              </button>
+              </Link>
 
               <a
                 href={personalInfo.resume}
