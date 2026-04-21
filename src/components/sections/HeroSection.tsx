@@ -42,13 +42,13 @@ export default function HeroSection({ onScrollToSection }: HeroSectionProps) {
 
           <Link
             href="/nestjs-developer"
-            className="relative inline-block group animate-[pulse_3.2s_ease-in-out_infinite]"
+            className="group relative inline-block animate-[pulse_3.2s_ease-in-out_infinite]"
           >
             {/* Glow iza dugmeta */}
-            <span className="absolute inset-0 -z-10 rounded-full bg-cyan-400/20 blur-md opacity-60 transition duration-500 group-hover:opacity-90 group-hover:blur-lg" />
+            <span className="absolute inset-0 -z-10 rounded-full bg-cyan-400/20 opacity-60 blur-md transition duration-500 group-hover:opacity-90 group-hover:blur-lg" />
 
             {/* Dugme */}
-            <span className="tag relative z-10 cursor-pointer transition duration-300 hover:-translate-y-0.5 hover:shadow-md border border-cyan-300/60 group-hover:border-cyan-400">
+            <span className="tag relative z-10 cursor-pointer border border-cyan-300/60 transition duration-300 hover:-translate-y-0.5 hover:shadow-md group-hover:border-cyan-400">
               NestJS & APIs
             </span>
           </Link>

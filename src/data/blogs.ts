@@ -14,6 +14,11 @@ export type BlogPost = {
       heading: string;
       paragraphs: string[];
       bullets?: string[];
+      codeBlocks?: {
+        label?: string;
+        language: string;
+        code: string;
+      }[];
     }[];
   };
 };
@@ -27,7 +32,6 @@ export const blogPosts: BlogPost[] = [
     category: "NestJS",
     date: "April 2026",
     readingTime: "6 min read",
-    featured: true,
     seoTitle: "How I Structure Scalable NestJS Applications | Lazar Panović",
     seoDescription:
       "A practical guide to structuring scalable NestJS applications with clear modules, business logic, validation, and maintainable backend architecture.",
@@ -84,52 +88,284 @@ export const blogPosts: BlogPost[] = [
     },
   },
   {
-    slug: "working-with-postgresql-and-mssql-in-real-backend-projects",
-    title: "Working with PostgreSQL and MSSQL in Real Backend Projects",
+    slug: "integrating-microsoft-entra-id-auth-in-nextjs-and-nestjs",
+    title: "Integrating Microsoft Entra ID Auth in a Next.js and NestJS App",
     excerpt:
-      "What changes when you work with both PostgreSQL and MSSQL in production systems, and what I pay attention to when building database-driven applications.",
-    category: "Databases",
+      "How I implemented Microsoft Entra ID authentication with MSAL on the frontend, token validation in NestJS, Azure Security Group checks, user sync, and JWT session handling.",
+    category: "Authentication",
     date: "April 2026",
-    readingTime: "7 min read",
+    readingTime: "9 min read",
+    featured: true,
     seoTitle:
-      "Working with PostgreSQL and MSSQL in Real Backend Projects | Lazar Panović",
+      "Integrating Microsoft Entra ID Auth in a Next.js and NestJS App | Lazar Panović",
     seoDescription:
-      "A practical look at working with PostgreSQL and MSSQL in backend systems, including schema design, query differences, and real-world tradeoffs.",
+      "A practical guide to integrating Microsoft Entra ID authentication in a Next.js and NestJS app using MSAL, token validation, Azure Security Groups, user sync, and JWT sessions.",
     content: {
       intro:
-        "On paper, SQL databases can look interchangeable. In real projects, they are not. PostgreSQL and MSSQL are both strong choices, but the details matter a lot when application logic, reporting, migrations, and performance become part of everyday development.",
+        "One of the more useful authentication setups I implemented recently was Microsoft Entra ID auth for a full stack application built with Next.js and NestJS. The goal was not just to let users sign in with Microsoft, but to make the login flow production-ready: validate the access token on the backend, check Azure Security Group membership, sync users into the local database, and then issue our own JWT for the application session. That gave us a clean separation between Microsoft authentication and our own application authorization flow.",
       sections: [
         {
-          heading: "The schema is only the beginning",
+          heading: "Start with Azure App Registration",
           paragraphs: [
-            "A good schema is not just normalized and technically correct. It has to support how the product behaves, how data is queried, and how reporting is built on top of it.",
-            "When working with PostgreSQL and MSSQL, I try to think beyond the table design itself and look at the full path of the data through the application.",
-          ],
-        },
-        {
-          heading: "Type differences matter more than expected",
-          paragraphs: [
-            "One of the first places where cross-database work becomes real is in column types. Date handling, booleans, decimals, and default values can behave differently enough to create bugs if they are treated as identical.",
-            "In backend systems that use ORMs, it helps to stay aware of what the ORM abstracts well and where database-specific behavior still needs attention.",
+            "The first step is setting up the application in Azure through App Registrations. That is where the application identity is created and where the important values come from: client ID, tenant ID, and client secret.",
+            "At this stage I also configure Redirect URIs for every environment. I usually add one for local development and one for each deployed environment. In practice that means local login can return to http://localhost:3000, while QA and production each get their own redirect URL. This is important because the frontend login flow needs to land back on a valid registered callback after Microsoft completes authentication.",
           ],
           bullets: [
-            "Numeric precision should be explicit",
-            "Date and timezone handling should be deliberate",
-            "Default values should be checked on both sides",
+            "Create the app registration in Azure / Microsoft Entra ID",
+            "Collect client ID, tenant ID, and client secret",
+            "Set Redirect URIs for local, QA, and production environments",
+            "Keep environment-specific values in configuration, not in code",
           ],
         },
         {
-          heading: "Queries are shaped by the product, not only the database",
+          heading: "Configure MSAL in the Next.js app",
           paragraphs: [
-            "In reporting-heavy systems, the database is not just storing records. It is powering summaries, comparisons, grouped views, and operational workflows.",
-            "That means the quality of query design often matters just as much as the schema itself. Readability, predictable joins, and careful indexing usually pay off more than premature optimization.",
+            "On the frontend side I use MSAL to handle the Microsoft login flow. Once the Azure application is ready, I configure MSAL in the Next.js app using the tenant ID and client ID, and define the redirect URI that matches the current environment.",
+            "After that, the login component only needs to trigger the configured MSAL login method. Once the user signs in successfully, the frontend receives the Microsoft access token. That token is then sent to the NestJS backend, where the more important validation and authorization steps happen.",
+          ],
+          bullets: [
+            "Set up MSAL config with tenant ID, client ID, and redirect URI",
+            "Use environment-based redirect URLs",
+            "Trigger login through the configured MSAL method",
+            "Pass the Microsoft access token to the backend after login",
+          ],
+          codeBlocks: [
+            {
+              label: "MSAL config",
+              language: "ts",
+              code: `import { Configuration, PublicClientApplication } from "@azure/msal-browser";
+  
+  export const msalConfig: Configuration = {
+    auth: {
+      clientId: \`\${process.env.NEXT_PUBLIC_MS_CLIENT_ID}\`,
+      authority: \`https://login.microsoftonline.com/\${process.env.NEXT_PUBLIC_MS_TENANT_ID}\`,
+      redirectUri: \`\${process.env.NEXT_PUBLIC_MS_REDIRECT_URI}\`,
+    },
+    cache: {
+      cacheLocation: "localStorage",
+    },
+  };
+  
+  export const loginRequest = {
+    scopes: [
+      "openid",
+      "profile",
+      "email",
+      "User.Read",
+    ],
+  };
+  
+  export const msalInstance = new PublicClientApplication(msalConfig);`,
+            },
+            {
+              label: "Login flow",
+              language: "ts",
+              code: `const login = async () => {
+    try {
+      const loginResult = await msalInstance.loginPopup(loginRequest);
+  
+      const account = loginResult.account!;
+      msalInstance.setActiveAccount(account);
+  
+      const tokenResult = await msalInstance.acquireTokenSilent({
+        ...loginRequest,
+        account,
+      });
+  
+      // send tokenResult.accessToken to backend
+      // persist backend user and JWT in local storage
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  };`,
+            },
           ],
         },
         {
-          heading: "Database work is product work",
+          heading: "Validate the Microsoft access token on the backend",
           paragraphs: [
-            "What I like about database-driven applications is that the data model often reveals the real complexity of the business. If the schema is confusing, the product usually becomes confusing too.",
-            "Good database work is not separate from product thinking. It is one of the strongest forms of it.",
+            "I do not treat the Microsoft access token as trusted just because it came from the frontend. In NestJS, the first backend step is validating that token against Microsoft's signing keys.",
+            "For that, I use the key discovery endpoint for the tenant and verify that the token is valid before doing anything else. This step is critical because everything after that depends on the backend being sure the token really came from Microsoft and really belongs to the authenticated user.",
+          ],
+          bullets: [
+            "Use the tenant key discovery endpoint",
+            "Validate the token signature and claims on the backend",
+            "Do not skip backend validation even if MSAL login succeeded on the frontend",
+          ],
+          codeBlocks: [
+            {
+              label: "Microsoft signing keys endpoint",
+              language: "ts",
+              code: `https://login.microsoftonline.com/\${tenantId}/discovery/v2.0/keys`,
+            },
+          ],
+        },
+        {
+          heading: "Check Azure Security Group membership",
+          paragraphs: [
+            "After token validation, the next step in my flow is authorization through Azure Security Groups. The idea is simple: not every valid Microsoft user should automatically get access to the app. Only users who belong to one of the allowed Azure Security Groups should be let in.",
+            "To do that, I fetch the groups the user belongs to and compare them against a list of allowed group IDs stored in our environment configuration. This makes group-based access control easy to manage without hardcoding access logic into the frontend.",
+          ],
+          bullets: [
+            "Fetch the user's transitive group membership from Microsoft Graph",
+            "Compare returned group IDs with allowed IDs from environment variables",
+            "Reject access if the user does not belong to an allowed security group",
+          ],
+          codeBlocks: [
+            {
+              label: "Group membership request",
+              language: "ts",
+              code: `fetch("https://graph.microsoft.com/v1.0/me/transitiveMemberOf?$select=id&$top=999", {
+    headers: {
+      Authorization: \`Bearer \${accessToken}\`,
+    },
+  });`,
+            },
+          ],
+        },
+        {
+          heading: "Fetch the Microsoft user profile and sync the local user",
+          paragraphs: [
+            "Once the user is both authenticated and authorized, I fetch the basic user profile from Microsoft Graph. In my flow that includes fields such as id, mail, displayName, and userPrincipalName.",
+            "That data is then matched against the local user table. If the user does not exist yet, I create a new record. If the user already exists, I compare the important fields and update them if something changed. This keeps the local application user record in sync with Microsoft without forcing me to treat Microsoft Graph as the only source of user state inside the app.",
+          ],
+          bullets: [
+            "Fetch user profile from Microsoft Graph",
+            "Create a local user if one does not exist",
+            "Update local user data if profile values changed",
+            "Keep Microsoft identity and local application user records aligned",
+          ],
+          codeBlocks: [
+            {
+              label: "Profile request",
+              language: "ts",
+              code: `fetch("https://graph.microsoft.com/v1.0/me?$select=id,mail,displayName,userPrincipalName", {
+    headers: {
+      Authorization: \`Bearer \${accessToken}\`,
+    },
+  });`,
+            },
+          ],
+        },
+        {
+          heading: "Issue your own JWT for the application session",
+          paragraphs: [
+            "After the Microsoft token is validated, the user is authorized by group membership, and the local user is synchronized, I issue our own JWT from the NestJS backend and return user and session data to the frontend.",
+            "This is an important design choice. It means the app can rely on its own session token for protected API routes instead of using the raw Microsoft token everywhere. That gives more control over authorization, simplifies backend guards, and makes the application architecture cleaner.",
+          ],
+          bullets: [
+            "Return local user and session data from NestJS",
+            "Issue your own application JWT after Microsoft validation",
+            "Use the app JWT for your own protected backend routes",
+          ],
+        },
+        {
+          heading: "Load extra user details on the frontend",
+          paragraphs: [
+            "After the frontend receives the successful login response and the local JWT flow is established, I do one more thing in the Next.js app: fetch the Microsoft user profile and photo for display purposes.",
+            "That lets me show user information in the UI without depending only on what came back in the first login response. For the user photo, I request the Microsoft Graph photo endpoint, convert the blob to a base64 data URL, and persist it so it survives page refreshes more cleanly.",
+          ],
+          bullets: [
+            "Fetch /me for profile data",
+            "Fetch /me/photo/$value for the user image",
+            "Convert the photo blob into a base64 data URL",
+            "Persist display name, email, initials, and photo on the frontend",
+          ],
+          codeBlocks: [
+            {
+              label: "Fetch profile and photo",
+              language: "ts",
+              code: `export async function fetchUserProfile() {
+    const token = await getAccessToken();
+  
+    const res = await fetch(\`\${GRAPH_BASE_ULR}/me\`, {
+      headers: {
+        Authorization: \`Bearer \${token}\`,
+      },
+    });
+  
+    return res.json();
+  }
+  
+  export async function fetchUserPhoto(): Promise<string | null> {
+    try {
+      const token = await getAccessToken();
+  
+      const res = await fetch(\`\${GRAPH_BASE_ULR}/me/photo/$value\`, {
+        headers: {
+          Authorization: \`Bearer \${token}\`,
+        },
+      });
+  
+      if (!res.ok) return null;
+  
+      const blob = await res.blob();
+  
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  }`,
+            },
+            {
+              label: "Persist profile on the frontend",
+              language: "ts",
+              code: `const loadUserProfile = async () => {
+    const profile = await fetchUserProfile();
+    const photoUrl = await fetchUserPhoto();
+  
+    const initials =
+      profile.givenName && profile.surname
+        ? \`\${profile.givenName[0]}\${profile.surname[0]}\`
+        : profile.displayName
+            .split(" ")
+            .map((n: string) => n[0])
+            .slice(0, 2)
+            .join("");
+  
+    persistUser({
+      displayName: profile.displayName,
+      email: profile.userPrincipalName,
+      initials,
+      photoUrl,
+    });
+  };`,
+            },
+            {
+              label: "Logout flow",
+              language: "ts",
+              code: `const logout = async () => {
+    try {
+      setJwt(null);
+      clearPersistedUser();
+      clearBackendUser();
+      api.removeAuthToken();
+      localStorage.removeItem(JWT_TOKEN);
+      localStorage.removeItem(REDIRECT_URL);
+      localStorage.removeItem("backend_user");
+  
+      await msalInstance.logoutPopup({
+        postLogoutRedirectUri: window.location.origin,
+        mainWindowRedirectUri: window.location.origin,
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      window.location.href = "/";
+    }
+  };`,
+            },
+          ],
+        },
+        {
+          heading: "Why this flow works well in real projects",
+          paragraphs: [
+            "What I like about this setup is that it keeps each responsibility in the right place. Microsoft Entra ID handles identity, MSAL handles the login flow on the frontend, NestJS handles backend validation and authorization, Azure Security Groups control access, and the application still keeps its own local user and JWT session model.",
+            "That makes the system easier to reason about and much easier to extend later. If you need local roles, audit logging, user syncing, or environment-specific access control, this flow already gives you the right foundation.",
           ],
         },
       ],

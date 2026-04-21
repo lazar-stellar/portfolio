@@ -107,7 +107,7 @@ export default function Navbar({ isDark, onToggleTheme }: NavbarProps) {
               className={`hidden items-center overflow-hidden transition-all duration-300 md:flex ${
                 shouldExpand
                   ? "mx-8 max-w-xl gap-6 opacity-100"
-                  : "mx-0 max-w-0 gap-0 opacity-0 pointer-events-none"
+                  : "pointer-events-none mx-0 max-w-0 gap-0 opacity-0"
               }`}
             >
               <Link href="/#about" className="nav-link">
@@ -131,7 +131,7 @@ export default function Navbar({ isDark, onToggleTheme }: NavbarProps) {
               className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ${
                 shouldExpand
                   ? "max-w-[140px] opacity-100"
-                  : "max-w-0 opacity-0 pointer-events-none md:max-w-[140px] md:opacity-100 md:pointer-events-auto"
+                  : "pointer-events-none max-w-0 opacity-0 md:pointer-events-auto md:max-w-[140px] md:opacity-100"
               }`}
             >
               <button
@@ -173,7 +173,7 @@ export default function Navbar({ isDark, onToggleTheme }: NavbarProps) {
                 : "pointer-events-none -translate-y-2 scale-95 opacity-0"
             }`}
           >
-            <div className="rounded-[1.75rem] border border-zinc-200/80 bg-white/92 p-4 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/88">
+            <div className="bg-white/92 dark:bg-zinc-950/88 rounded-[1.75rem] border border-zinc-200/80 p-4 shadow-2xl backdrop-blur-xl dark:border-white/10">
               <div className="grid gap-3">
                 {mobileLinks.map((link, index) => (
                   <Link

@@ -35,28 +35,7 @@ export default function FeaturedProjectCard({
               alt="Mobile view"
               width={400}
               height={800}
-              className="
-                absolute
-                bottom-[10%]
-                right-[-15%]
-                z-10
-                w-[200px]
-                xs:w-[230px]
-                sm:w-[350px]
-                md:bottom-[6%]
-                md:right-[-5%]
-                md:w-[440px]
-                lg:bottom-[5%]
-                lg:right-[-10%]
-                lg:w-[340px]
-                object-contain
-                drop-shadow-2xl
-                transition-all duration-500 ease-out
-                group-hover:rotate-[-6deg]
-                group-hover:-translate-y-1
-                group-hover:translate-x-1
-                group-hover:scale-[1.05]
-              "
+              className="xs:w-[230px] absolute bottom-[10%] right-[-15%] z-10 w-[200px] object-contain drop-shadow-2xl transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:rotate-[-6deg] group-hover:scale-[1.05] sm:w-[350px] md:bottom-[6%] md:right-[-5%] md:w-[440px] lg:bottom-[5%] lg:right-[-10%] lg:w-[340px]"
             />
           </div>
         </div>

@@ -23,7 +23,7 @@ export default function ContactSection() {
   return (
     <section
       id="contact"
-      className="border-t border-zinc-200 bg-white/70 pt-14 pb-16 dark:border-white/10 dark:bg-white/[0.03] sm:pt-16 sm:pb-20"
+      className="border-t border-zinc-200 bg-white/70 pb-16 pt-14 dark:border-white/10 dark:bg-white/[0.03] sm:pb-20 sm:pt-16"
     >
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
         <Reveal>
