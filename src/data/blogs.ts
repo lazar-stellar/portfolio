@@ -25,69 +25,6 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
-    slug: "how-i-structure-scalable-nestjs-applications",
-    title: "How I Structure Scalable NestJS Applications",
-    excerpt:
-      "A practical look at how I organize modules, business logic, and APIs in NestJS projects that need to stay maintainable as they grow.",
-    category: "NestJS",
-    date: "April 2026",
-    readingTime: "6 min read",
-    seoTitle: "How I Structure Scalable NestJS Applications | Lazar Panović",
-    seoDescription:
-      "A practical guide to structuring scalable NestJS applications with clear modules, business logic, validation, and maintainable backend architecture.",
-    content: {
-      intro:
-        "When a NestJS project is small, almost any structure can feel good enough. The real challenge starts when the application grows, business rules become more complex, and multiple modules begin to depend on each other. My goal is always to keep the structure simple enough to move fast, but clear enough to scale.",
-      sections: [
-        {
-          heading: "Start with the domain, not the framework",
-          paragraphs: [
-            "I try not to structure backend code around technical folders alone. Instead of thinking first about controllers, services, and DTOs, I start from the business domains the application actually has.",
-            "That usually leads to modules that represent real product concepts: invoices, users, reports, billing periods, or integrations. NestJS works especially well when modules match the language of the business.",
-          ],
-          bullets: [
-            "One module should solve one clear business problem",
-            "Shared code should stay minimal and intentional",
-            "Cross-module dependencies should be explicit",
-          ],
-        },
-        {
-          heading: "Keep business logic out of controllers",
-          paragraphs: [
-            "Controllers should stay thin. Their job is to receive the request, validate input, and delegate to the service layer. Once controllers start containing conditionals, mapping, and domain rules, they become harder to maintain and test.",
-            "I prefer services that are focused, readable, and close to the language of the product. That keeps the application easier to extend when requirements change.",
-          ],
-        },
-        {
-          heading: "Separate data access from orchestration",
-          paragraphs: [
-            "In larger applications, a service often does too much if it is responsible for both database access and workflow orchestration. A better pattern is to keep persistence logic predictable and let higher-level services coordinate the flow.",
-            "This becomes especially useful in reporting, background jobs, or integrations where one use case touches multiple tables or external systems.",
-          ],
-          bullets: [
-            "Repositories or query-oriented services for data access",
-            "Application services for orchestration",
-            "Clear boundaries between read-heavy and write-heavy flows",
-          ],
-        },
-        {
-          heading: "Validation and DTOs should reduce ambiguity",
-          paragraphs: [
-            "DTOs are not just there to satisfy decorators. They are a contract. Clear DTOs with strong validation reduce ambiguity between frontend and backend, improve API reliability, and make refactoring safer.",
-            "I try to keep DTOs expressive and close to actual use cases rather than creating generic payload shapes that become confusing over time.",
-          ],
-        },
-        {
-          heading: "Structure for future changes",
-          paragraphs: [
-            "The best backend structure is not the most clever one. It is the one that makes the next change easier. When I structure NestJS applications, I am always thinking about the next module, the next feature, the next integration, and the next developer reading the code.",
-            "A scalable NestJS application is usually the result of small, disciplined decisions repeated consistently.",
-          ],
-        },
-      ],
-    },
-  },
-  {
     slug: "integrating-microsoft-entra-id-auth-in-nextjs-and-nestjs",
     title: "Integrating Microsoft Entra ID Auth in a Next.js and NestJS App",
     excerpt:
@@ -372,48 +309,646 @@ export const blogPosts: BlogPost[] = [
     },
   },
   {
-    slug: "building-full-stack-products-with-nextjs-and-nestjs",
-    title: "Building Full Stack Products with Next.js and NestJS",
+    slug: "auth-in-nestjs-with-jwt-refresh-tokens-and-email-verification",
+    title: "How I Build Authentication in NestJS Apps",
     excerpt:
-      "Why I like the combination of Next.js and NestJS for modern product development, and how I think about the connection between frontend, backend, and data.",
-    category: "Full Stack",
+      "A practical walkthrough of how I implement authentication in NestJS using JWT access tokens, refresh tokens, email verification, password reset flows, and route protection.",
+    category: "Authentication",
     date: "April 2026",
-    readingTime: "6 min read",
-    seoTitle:
-      "Building Full Stack Products with Next.js and NestJS | Lazar Panović",
+    readingTime: "8 min read",
+    featured: true,
+    seoTitle: "How I Build Authentication in NestJS Apps | Lazar Panović",
     seoDescription:
-      "Why Next.js and NestJS work well together for full stack product development, from frontend delivery to API architecture and backend logic.",
+      "A practical guide to building authentication in NestJS with JWT access tokens, refresh tokens, email verification, password reset flows, and protected routes.",
     content: {
       intro:
-        "A strong full stack product is not just a frontend connected to an API. The real value comes from how well the layers fit together: UI, routing, validation, backend logic, data, and product behavior. That is why I like the combination of Next.js and NestJS.",
+        "Authentication is one of those backend areas that looks simple at first and gets more serious very quickly. Logging in a user is not enough on its own. A real application usually needs registration, hashed passwords, token-based access, refresh logic, email verification, password reset flows, and protected routes that can trust the current user. In one of my NestJS applications, I implemented an auth flow that tries to cover those real needs while still keeping the code understandable and maintainable.",
       sections: [
         {
-          heading: "Frontend and backend should speak the same language",
+          heading: "Start with clear user and token models",
           paragraphs: [
-            "When a frontend and backend evolve separately, friction appears quickly. The API shape becomes unclear, validation gets duplicated, and product behavior starts to feel inconsistent.",
-            "With Next.js and NestJS, I like keeping the boundaries clear while still thinking about the full user flow end-to-end.",
+            "The auth flow becomes much easier to reason about when the database structure reflects the real responsibilities of the system. In my case, the user record stores identity and account state, while session and token records handle authentication lifecycle concerns separately.",
+            "The user entity contains the usual account fields like email, password hash, first name, last name, and email verification state. I keep password hashes only, never raw passwords, and I also track whether the email address has been verified and when that happened.",
+            "Besides the user itself, I also use a dedicated table for user sessions and another one for one-time auth tokens like email verification and password reset tokens. That separation helps because not every token in the system should behave the same way.",
+          ],
+          bullets: [
+            "Users store identity and account state",
+            "Sessions represent logged-in device or client state",
+            "Auth tokens represent one-time actions like verification and password reset",
+          ],
+          codeBlocks: [
+            {
+              label: "User entity",
+              language: "ts",
+              code: `@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 255, unique: true })
+  email: string;
+
+  @Column({ name: 'password_hash', type: 'text' })
+  passwordHash: string;
+
+  @Column({ name: 'first_name', type: 'varchar', length: 100 })
+  firstName: string;
+
+  @Column({ name: 'last_name', type: 'varchar', length: 100 })
+  lastName: string;
+
+  @Column({ name: 'is_email_verified', type: 'boolean', default: false })
+  isEmailVerified: boolean;
+
+  @Column({ name: 'email_verified_at', type: 'timestamptz', nullable: true })
+  emailVerifiedAt: Date | null;
+}`,
+            },
+            {
+              label: "One-time auth token entity",
+              language: "ts",
+              code: `@Entity('auth_tokens')
+export class AuthToken {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId: string;
+
+  @Column({ name: 'token_hash', type: 'text' })
+  tokenHash: string;
+
+  @Column({ type: 'varchar', length: 50 })
+  type: AuthTokenType;
+
+  @Column({ name: 'expires_at', type: 'timestamptz' })
+  expiresAt: Date;
+
+  @Column({ name: 'used_at', type: 'timestamptz', nullable: true })
+  usedAt: Date | null;
+}`,
+            },
+          ],
+        },
+        {
+          heading: "Registration should do more than create a user",
+          paragraphs: [
+            "When a user registers, I first normalize the email, check whether an account already exists, and hash the password with Argon2. Hashing is one of the most important steps in the entire flow, because password storage should never rely on plain text or reversible encryption.",
+            "After creating the user, I immediately generate an email verification token and send it through the mail service. That means a newly created account exists, but still cannot fully behave like a verified account until the email verification step is completed.",
+            "This approach keeps the initial registration flow simple while still supporting a more secure onboarding process.",
+          ],
+          bullets: [
+            "Normalize the email before lookup and storage",
+            "Hash passwords before saving them",
+            "Create a verification token right after registration",
+            "Treat email verification as part of account activation",
+          ],
+          codeBlocks: [
+            {
+              label: "Register flow",
+              language: "ts",
+              code: `async register(dto: RegisterDto) {
+  const email = dto.email.toLowerCase().trim();
+
+  const existingUser = await this.usersService.findByEmail(email);
+  if (existingUser) {
+    throw new BadRequestException('User with this email already exists');
+  }
+
+  const passwordHash = await argon2.hash(dto.password);
+
+  const user = await this.usersService.create({
+    email,
+    passwordHash,
+    firstName: dto.firstName.trim(),
+    lastName: dto.lastName.trim(),
+    isEmailVerified: false,
+  });
+
+  const rawVerificationToken = await this.createEmailVerificationToken(user.id);
+  await this.sendVerificationEmail(user.email, rawVerificationToken);
+
+  return this.createAuthSession(
+    user.id,
+    user.email,
+    user.firstName,
+    user.lastName,
+  );
+}`,
+            },
+          ],
+        },
+        {
+          heading: "Login should verify both credentials and account state",
+          paragraphs: [
+            "A good login flow is not only about checking whether the password is correct. It should also verify whether the account is in the right state to log in. In my implementation, that means checking that the user exists, that the email has already been verified, and that the password matches the stored hash.",
+            "That small extra check for email verification is important because it prevents the app from treating a new but unverified account as fully active.",
+          ],
+          codeBlocks: [
+            {
+              label: "Login flow",
+              language: "ts",
+              code: `async login(dto: LoginDto) {
+  const email = dto.email.toLowerCase().trim();
+
+  const user = await this.usersService.findByEmail(email);
+  if (!user) {
+    throw new UnauthorizedException('Invalid credentials');
+  }
+
+  if (!user.isEmailVerified) {
+    throw new UnauthorizedException('Email is not verified');
+  }
+
+  const isPasswordValid = await argon2.verify(
+    user.passwordHash,
+    dto.password,
+  );
+
+  if (!isPasswordValid) {
+    throw new UnauthorizedException('Invalid credentials');
+  }
+
+  return this.createAuthSession(
+    user.id,
+    user.email,
+    user.firstName,
+    user.lastName,
+  );
+}`,
+            },
           ],
         },
         {
           heading:
-            "Next.js works best when the UI reflects real product structure",
+            "Use access tokens for API access and separate one-time tokens for account actions",
           paragraphs: [
-            "A frontend becomes easier to maintain when routing, views, and components follow the actual structure of the product instead of becoming a collection of disconnected screens.",
-            "That is especially important in dashboards, internal tools, and data-heavy applications where user flows depend on backend behavior.",
+            "One detail I like in this setup is that different token types are used for different purposes. The JWT access token is for authenticated API calls. The refresh token is for continuing a session without asking the user to log in again too often. And separate raw tokens are generated for flows like email verification and password reset.",
+            "That avoids mixing responsibilities. A password reset token should not behave like a session token, and a session token should not be reused for one-time security actions.",
+          ],
+          codeBlocks: [
+            {
+              label: "Auth token type enum",
+              language: "ts",
+              code: `export enum AuthTokenType {
+  EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
+  PASSWORD_RESET = 'PASSWORD_RESET',
+}`,
+            },
           ],
         },
         {
-          heading: "NestJS gives structure to backend complexity",
+          heading:
+            "Protect routes with JWT strategy and a current user decorator",
           paragraphs: [
-            "On the backend side, NestJS gives a strong foundation for module boundaries, validation, services, integrations, and long-term maintainability.",
-            "That becomes especially useful when the application grows beyond simple CRUD and starts to include reporting, jobs, auth flows, and more advanced business rules.",
+            "Once the user is authenticated, protected endpoints should be able to trust a validated user object without repeating auth logic in every controller. In NestJS, Passport and JWT strategy make that part clean.",
+            "I use a JWT strategy that reads the access token from the Authorization header, verifies it using the configured secret, loads the user, validates the related session, and then returns a safe current-user object to the request context.",
+            "That allows protected endpoints to stay very small. The controller only declares the guard and receives the current user through a custom decorator.",
+          ],
+          codeBlocks: [
+            {
+              label: "JWT strategy",
+              language: "ts",
+              code: `@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: configService.get<string>('JWT_ACCESS_SECRET'),
+    });
+  }
+
+  async validate(payload: { sub: string; email: string; sessionId: string }) {
+    const user = await this.authService.validateUserById(payload.sub);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const session = await this.authService.validateSessionById(
+      payload.sessionId,
+      user.id,
+    );
+
+    if (!session) {
+      throw new UnauthorizedException('Session is invalid');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      isEmailVerified: user.isEmailVerified,
+      sessionId: payload.sessionId,
+    };
+  }
+}`,
+            },
+            {
+              label: "Protected route with current user",
+              language: "ts",
+              code: `@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard)
+@Get('me')
+me(@CurrentUser() user: CurrentUserType) {
+  return { user };
+}`,
+            },
+            {
+              label: "Current user decorator",
+              language: "ts",
+              code: `export const CurrentUser = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.user;
+  },
+);`,
+            },
           ],
         },
         {
-          heading: "The best full stack work happens in the seams",
+          heading:
+            "Email verification and password reset are part of auth, not optional extras",
           paragraphs: [
-            "The interesting part of full stack development is often not the frontend alone or the backend alone. It is the seam between them: data contracts, loading flows, validation, error handling, and how the product actually feels to use.",
-            "That is where I try to spend the most attention when building modern web applications.",
+            "In many real products, authentication is not finished when login works. Users also need a secure way to verify their email and recover access if they forget their password.",
+            "For both flows, I generate a random raw token, hash it before storing it in the database, and give it an expiration time. When the user later clicks the verification or reset link, I compare the raw token with stored token hashes until I find a valid match that is not expired and not already used.",
+            "After a successful verification or password reset, I mark the token as used. That makes the flow one-time by design.",
+          ],
+          codeBlocks: [
+            {
+              label: "Create email verification token",
+              language: "ts",
+              code: `private async createEmailVerificationToken(userId: string) {
+  const rawToken = this.generateRawToken();
+  const tokenHash = await argon2.hash(rawToken);
+
+  const authToken = this.authTokenRepo.create({
+    userId,
+    tokenHash,
+    type: AuthTokenType.EMAIL_VERIFICATION,
+    expiresAt: this.getEmailVerificationExpiryDate(),
+    usedAt: null,
+  });
+
+  await this.authTokenRepo.save(authToken);
+
+  return rawToken;
+}`,
+            },
+            {
+              label: "Verify email",
+              language: "ts",
+              code: `async verifyEmail(rawToken: string) {
+  const authToken = await this.findValidEmailVerificationToken(rawToken);
+
+  if (!authToken) {
+    throw new UnauthorizedException('Invalid or expired verification token');
+  }
+
+  if (authToken.user.isEmailVerified) {
+    return {
+      message: 'Email is already verified',
+    };
+  }
+
+  await this.usersService.markEmailAsVerified(authToken.userId);
+
+  authToken.usedAt = new Date();
+  await this.authTokenRepo.save(authToken);
+
+  return {
+    message: 'Email verified successfully',
+  };
+}`,
+            },
+            {
+              label: "Reset password",
+              language: "ts",
+              code: `async resetPassword(token: string, newPassword: string) {
+  const authToken = await this.findValidPasswordResetToken(token);
+
+  if (!authToken) {
+    throw new UnauthorizedException('Invalid or expired reset token');
+  }
+
+  const passwordHash = await argon2.hash(newPassword);
+
+  await this.usersService.updatePassword(authToken.userId, passwordHash);
+  await this.usersService.revokeAllSessionsForUser(authToken.userId);
+
+  authToken.usedAt = new Date();
+  await this.authTokenRepo.save(authToken);
+
+  return {
+    message: 'Password has been reset successfully',
+  };
+}`,
+            },
+          ],
+        },
+        {
+          heading: "Why this auth structure works well for real applications",
+          paragraphs: [
+            "What I like about this setup is that it stays practical. It covers the common real-world auth requirements without turning the codebase into a maze. Registration, login, protected routes, email verification, password reset, and session-aware JWT validation all have their own clear responsibilities.",
+            "The result is an auth layer that feels production-oriented, but still readable for future maintenance. And for me, that is always the goal: not just making authentication work, but making it understandable and safe to extend later.",
+          ],
+        },
+      ],
+    },
+  },
+  {
+    slug: "how-i-handle-user-sessions-in-nestjs",
+    title: "How I Handle User Sessions in NestJS",
+    excerpt:
+      "A practical look at how I manage user sessions in NestJS using refresh tokens, database-backed session records, token rotation, session revocation, and forced logout flows.",
+    category: "NestJS",
+    date: "April 2026",
+    readingTime: "7 min read",
+    seoTitle: "How I Handle User Sessions in NestJS | Lazar Panović",
+    seoDescription:
+      "Learn how to handle user sessions in NestJS with refresh tokens, database-backed session records, token rotation, revocation, and secure logout flows.",
+    content: {
+      intro:
+        "Authentication answers the question of who the user is. Session handling answers a different question: should this user still be considered logged in right now? That distinction matters a lot in real applications. In one of my NestJS projects, I wanted sessions to be more than a long-lived token sitting on the client. I wanted the backend to be able to validate, rotate, revoke, and invalidate sessions when sensitive actions happen. That led me to a simple but useful session model built around refresh tokens and a dedicated user_sessions table.",
+      sections: [
+        {
+          heading: "Store sessions in the database, not only in the token",
+          paragraphs: [
+            "One of the key decisions in my implementation was not relying only on JWTs as the entire source of truth. Instead, I store each refresh-token-based session in the database.",
+            "That gives the backend real control. A session can be revoked, checked for expiration, or invalidated after a password change. Without that database record, the backend would have fewer options once a token is issued.",
+          ],
+          codeBlocks: [
+            {
+              label: "User session entity",
+              language: "ts",
+              code: `@Entity('user_sessions')
+export class UserSession {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId: string;
+
+  @Column({ name: 'refresh_token_hash', type: 'text' })
+  refreshTokenHash: string;
+
+  @Column({ name: 'expires_at', type: 'timestamptz' })
+  expiresAt: Date;
+
+  @Column({ name: 'revoked_at', type: 'timestamptz', nullable: true })
+  revokedAt: Date | null;
+}`,
+            },
+          ],
+        },
+        {
+          heading: "Create a session when the user authenticates successfully",
+          paragraphs: [
+            "After login or registration succeeds, I create a new session record and issue both an access token and a refresh token. The access token is short-lived and used for normal API requests. The refresh token is longer-lived and is tied to the session record in the database.",
+            "One small implementation detail I like here is that the session is created first, then its database ID is included in both JWT payloads as sessionId. That means every future request can be tied back to a concrete stored session.",
+          ],
+          codeBlocks: [
+            {
+              label: "JWT payload",
+              language: "ts",
+              code: `export interface JwtPayload {
+  sub: string;
+  email: string;
+  sessionId: string;
+}`,
+            },
+            {
+              label: "Create auth session",
+              language: "ts",
+              code: `private async createAuthSession(
+  userId: string,
+  email: string,
+  firstName: string | null,
+  lastName: string | null,
+) {
+  const accessExpiresIn = this.getAccessTokenExpiresIn();
+  const refreshExpiresIn = this.getRefreshTokenExpiresIn();
+  const expiresAt = this.getRefreshTokenExpiryDate(refreshExpiresIn);
+
+  const temporarySession = await this.usersService.createSession({
+    userId,
+    refreshTokenHash: 'pending',
+    expiresAt,
+  });
+
+  const payload: JwtPayload = {
+    sub: userId,
+    email,
+    sessionId: temporarySession.id,
+  };
+
+  const accessToken = await this.jwtService.signAsync(payload, {
+    secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+    expiresIn: accessExpiresIn,
+  });
+
+  const refreshToken = await this.jwtService.signAsync(payload, {
+    secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+    expiresIn: refreshExpiresIn,
+  });
+
+  const refreshTokenHash = await argon2.hash(refreshToken);
+
+  await this.usersService.updateSessionTokenHash(
+    temporarySession.id,
+    refreshTokenHash,
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: userId,
+      email,
+      firstName,
+      lastName,
+    },
+  };
+}`,
+            },
+          ],
+        },
+        {
+          heading: "Hash refresh tokens before storing them",
+          paragraphs: [
+            "A pattern I strongly prefer is hashing refresh tokens before saving them to the database. That is similar to how passwords are handled. If the database were ever exposed, raw refresh tokens should not be readable in plain form.",
+            "In this setup, the client keeps the raw refresh token, while the backend stores only a hashed version. Later, when the client sends the refresh token to request new access, the backend verifies it against the stored hash.",
+          ],
+          bullets: [
+            "Raw refresh token lives only on the client side",
+            "Database stores only the token hash",
+            "Argon2 verification is used during refresh",
+          ],
+        },
+        {
+          heading:
+            "Refresh flow should rotate the session, not just extend it blindly",
+          paragraphs: [
+            "The refresh endpoint is where session handling becomes more than basic JWT usage. In my implementation, the backend first verifies the refresh token signature, loads the related user and session, checks whether the session is revoked or expired, and then verifies the token against the stored token hash.",
+            "Once that succeeds, I revoke the old session and create a brand new one. That means refresh token usage rotates the session instead of endlessly reusing the same stored token state.",
+            "This gives better control and reduces the chance of a stolen refresh token staying useful for too long.",
+          ],
+          codeBlocks: [
+            {
+              label: "Refresh flow with session rotation",
+              language: "ts",
+              code: `async refresh(dto: RefreshTokenDto) {
+  const payload = await this.verifyRefreshToken(dto.refreshToken);
+
+  const user = await this.usersService.findById(payload.sub);
+  if (!user) {
+    throw new UnauthorizedException('Invalid refresh token');
+  }
+
+  const session = await this.usersService.findSessionById(payload.sessionId);
+  if (!session || session.revokedAt) {
+    throw new UnauthorizedException('Session is invalid');
+  }
+
+  if (session.expiresAt.getTime() < Date.now()) {
+    throw new UnauthorizedException('Refresh token expired');
+  }
+
+  const isRefreshTokenValid = await argon2.verify(
+    session.refreshTokenHash,
+    dto.refreshToken,
+  );
+
+  if (!isRefreshTokenValid) {
+    throw new UnauthorizedException('Invalid refresh token');
+  }
+
+  await this.usersService.revokeSession(session.id);
+
+  return this.createAuthSession(
+    user.id,
+    user.email,
+    user.firstName,
+    user.lastName,
+  );
+}`,
+            },
+          ],
+        },
+        {
+          heading: "Validate the session on every protected request",
+          paragraphs: [
+            "A very useful part of this setup is that access-token validation is not based only on token signature and expiry. The JWT strategy also checks the related session record in the database.",
+            "That means even a valid-looking access token should not be trusted if its session has already been revoked or expired. This is one of the main benefits of combining JWT auth with database-backed sessions.",
+          ],
+          codeBlocks: [
+            {
+              label: "Session validation",
+              language: "ts",
+              code: `async validateSessionById(sessionId: string, userId: string) {
+  const session = await this.usersService.findSessionById(sessionId);
+
+  if (!session) {
+    return null;
+  }
+
+  if (session.userId !== userId) {
+    return null;
+  }
+
+  if (session.revokedAt) {
+    return null;
+  }
+
+  if (session.expiresAt.getTime() < Date.now()) {
+    return null;
+  }
+
+  return session;
+}`,
+            },
+          ],
+        },
+        {
+          heading: "Logout and password changes should revoke sessions",
+          paragraphs: [
+            "A session system becomes really useful when the backend can actively kill sessions. In my implementation, logout revokes the current session, while password reset and password change revoke all active sessions for that user.",
+            "That is a strong real-world security improvement. If a user changes their password because of suspicion or account recovery, all older sessions should stop being trusted.",
+          ],
+          codeBlocks: [
+            {
+              label: "Logout flow",
+              language: "ts",
+              code: `async logout(dto: LogoutDto) {
+  const payload = await this.verifyRefreshToken(dto.refreshToken);
+  const session = await this.usersService.findSessionById(payload.sessionId);
+
+  if (session && !session.revokedAt) {
+    await this.usersService.revokeSession(session.id);
+  }
+
+  return { success: true };
+}`,
+            },
+            {
+              label: "Revoke all sessions for a user",
+              language: "ts",
+              code: `async revokeAllSessionsForUser(userId: string) {
+  await this.sessionsRepository
+    .createQueryBuilder()
+    .update()
+    .set({ revokedAt: new Date() })
+    .where('user_id = :userId', { userId })
+    .andWhere('revoked_at IS NULL')
+    .execute();
+}`,
+            },
+            {
+              label: "Change password and invalidate all sessions",
+              language: "ts",
+              code: `async changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+) {
+  const user = await this.usersService.findById(userId);
+
+  if (!user) {
+    throw new UnauthorizedException('User not found');
+  }
+
+  const isCurrentPasswordValid = await argon2.verify(
+    user.passwordHash,
+    currentPassword,
+  );
+
+  if (!isCurrentPasswordValid) {
+    throw new UnauthorizedException('Current password is incorrect');
+  }
+
+  const passwordHash = await argon2.hash(newPassword);
+
+  await this.usersService.updatePassword(userId, passwordHash);
+  await this.usersService.revokeAllSessionsForUser(userId);
+
+  return {
+    message: 'Password changed successfully. Please log in again.',
+  };
+}`,
+            },
+          ],
+        },
+        {
+          heading: "Why I prefer this session model",
+          paragraphs: [
+            "What I like about this approach is that it stays understandable while giving the backend meaningful control over user sessions. It supports token rotation, revocation, forced logout, and session-aware request validation without becoming too complex.",
+            "It also mirrors the way I like to design backend systems in general: keep the flow explicit, store security-critical state intentionally, and avoid pretending that a JWT by itself solves the whole session problem.",
+            "For me, that is the real value of session handling in NestJS. It is not just about keeping a user logged in. It is about making that state trustworthy.",
           ],
         },
       ],
